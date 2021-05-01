@@ -1,23 +1,21 @@
 import numpy as np
 import time
 
-
-class lissajous_figure:
-    """
-    Фигуры Лиссажу.
-    Задаётся набором точек с координатами x и y.
-    """
-    def __init__(self, x_array, y_array):
-
-        self.x_arr=x_array
-        self.y_arr=y_array
+from PyQt5 import QtCore
 
 
-class LissajousGenerator:
+from PyQt5.QtCore import *
+
+doDelay = False
+
+class LJ(QObject):
     """
     Генерирует фигуры Лиссажу с заданными параметрами
     """
+    signalData = pyqtSignal(np.ndarray)
+
     def __init__(self, resolution=20):
+        super(LJ, self).__init__()
         self.set_resolution(resolution)
         
         # Эта задержка эмулирует процедуру инициализации следующей версии генератора.
@@ -26,6 +24,23 @@ class LissajousGenerator:
         # P.S. В новом генераторе задержка будет только при инициализации.
         # Фигуры будут генерироваться так же быстро, как и сейчас.
         time.sleep(1)
+    @QtCore.pyqtSlot(int,int)
+    def callCalc(self, x_freq, y_freq):
+        if doDelay:
+            time.sleep(5)
+        t = np.linspace(0, 2 * np.pi, self._resolution)
+        x = np.sin(x_freq * t)
+        y = np.cos(y_freq * t)
+        self.signalData.emit(self.doCalc( x_freq, y_freq))
+
+    def doCalc(self, x_freq, y_freq):
+        t = np.linspace(0, 2 * np.pi, self._resolution)
+        x = np.sin(x_freq * t)
+        y = np.cos(y_freq * t)
+        return np.vstack((x, y))
+
+    def run(self):
+        pass #time.sleep(10)
 
     def set_resolution(self, resolution):
         """
@@ -33,11 +48,5 @@ class LissajousGenerator:
         """
         self._resolution = resolution
 
-    def generate_figure(self, freq_x, freq_y):
-        """
-        Генерирует фигуру (массивы x и y координат точек) с заданными частотами.
-        """
-        t = np.linspace(0, 2 * np.pi, self._resolution)
-        x = np.sin(freq_x * t)
-        y = np.cos(freq_y * t)
-        return lissajous_figure(x, y)
+
+
